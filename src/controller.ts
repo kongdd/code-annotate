@@ -1,12 +1,8 @@
 import * as vscode from "vscode";
-import { exec } from "child_process";
-import { promisify } from "util";
 import * as path from "path";
 import * as fs from "fs";
 import { Annotation, Reply } from "./types";
 import { Storage } from "./storage";
-
-const execAsync = promisify(exec);
 
 interface ThreadHandle {
   thread: vscode.CommentThread;
@@ -16,7 +12,6 @@ interface ThreadHandle {
 export class AnnotationController implements vscode.Disposable {
   readonly commentController: vscode.CommentController;
   private threads = new Map<string, ThreadHandle>();
-  private author: string = "user";
   private changeEmitter = new vscode.EventEmitter<void>();
   readonly onDidChange = this.changeEmitter.event;
 
@@ -40,21 +35,7 @@ export class AnnotationController implements vscode.Disposable {
   }
 
   async init(): Promise<void> {
-    this.author = await this.resolveAuthor();
     this.renderAll();
-  }
-
-  private async resolveAuthor(): Promise<string> {
-    try {
-      const { stdout } = await execAsync("git config user.name", {
-        cwd: this.workspaceFolder.uri.fsPath
-      });
-      const name = stdout.trim();
-      if (name) return name;
-    } catch {
-      // fall through
-    }
-    return process.env.USER || process.env.USERNAME || "user";
   }
 
   refresh(): void {
@@ -95,8 +76,7 @@ export class AnnotationController implements vscode.Disposable {
     return {
       body: new vscode.MarkdownString(reply.body),
       mode: vscode.CommentMode.Preview,
-      author: { name: reply.author },
-      timestamp: new Date(reply.timestamp)
+      author: { name: "user" }
     };
   }
 
@@ -145,11 +125,7 @@ export class AnnotationController implements vscode.Disposable {
     if (existingId) {
       const ann = this.storage.getById(existingId);
       if (!ann) return;
-      ann.thread.push({
-        author: this.author,
-        timestamp: new Date().toISOString(),
-        body: trimmed
-      });
+      ann.thread.push({ body: trimmed });
       await this.storage.upsert(ann);
       thread.comments = [...ann.thread.map((r) => this.toComment(r))];
       return;
@@ -161,13 +137,8 @@ export class AnnotationController implements vscode.Disposable {
       startLine: range.start.line + 1,
       endLine: range.end.line + 1,
       status: "open",
-      createdAt: new Date().toISOString(),
       thread: [
-        {
-          author: this.author,
-          timestamp: new Date().toISOString(),
-          body: trimmed
-        }
+        { body: trimmed }
       ]
     };
     await this.storage.upsert(ann);

@@ -36,7 +36,7 @@ Everything you've annotated is in `.annotations.json` at the workspace root. Dif
 
 ![The raw .annotations.json file](media/screenshots/annotations-as-json.png)
 
-Line numbers are 1-indexed and inclusive. The `author` defaults to your `git config user.name`.
+Line numbers are 1-indexed and inclusive.
 
 ## Commands
 

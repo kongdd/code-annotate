@@ -1,8 +1,6 @@
 export type AnnotationStatus = "open" | "resolved";
 
 export interface Reply {
-  author: string;
-  timestamp: string;
   body: string;
 }
 
@@ -12,7 +10,6 @@ export interface Annotation {
   startLine: number;
   endLine: number;
   status: AnnotationStatus;
-  createdAt: string;
   thread: Reply[];
 }
 

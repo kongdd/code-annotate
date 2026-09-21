@@ -103,7 +103,7 @@ export class Storage implements vscode.Disposable {
 
   private async persist(): Promise<void> {
     if (!this.fileUri) return;
-    const text = JSON.stringify(this.data, null, 2) + "\n";
+    const text = JSON.stringify(this.data) + "\n";
     this.selfWriteUntil = Date.now() + 500;
     await vscode.workspace.fs.writeFile(this.fileUri, new TextEncoder().encode(text));
   }
